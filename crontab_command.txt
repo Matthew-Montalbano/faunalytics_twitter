@@ -1,1 +1,1 @@
-00 01 * * * cd /home/ubuntu/twitter_python/faunalytics_twittier && python twitter_python.py && ./zip_todays_data.sh
+00 01 * * * cd /home/ubuntu/twitter_python/faunalytics_twitter && python twitter_python.py 2 && ./zip_todays_data.sh 2

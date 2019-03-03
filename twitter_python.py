@@ -10,6 +10,7 @@ import datetime
 #import jsonpickle
 import pickle
 import re
+import sys
 
 consumer_key = "PDZPPLGUu5ySTrR5viqi2l9mN"
 consumer_secret = "9VOIBWCGl7Y7sJ6hXaP5QY9j7wKYBMo9NzK8Fun29IIpRc1Xbo"
@@ -19,7 +20,7 @@ access_token_secret = "tXT82ibd014C9xfUk7kBaIcZdBzm8D7cf999rD2gISl3L"
 max_tweets = 1000000
 
 
-def download_twitter_search(search_terms, search_group):
+def download_twitter_search(search_terms, search_group, offset):
 
     #https://gist.github.com/vickyqian/f70e9ab3910c7c290d9d715491cde44c
     #  Good info!:
@@ -41,8 +42,8 @@ def download_twitter_search(search_terms, search_group):
         print ("Problem Connecting to API")
 
 
-    start_date = (datetime.datetime.today() + datetime.timedelta(days=-2)).strftime('%Y-%m-%d')
-    end_date = (datetime.datetime.today() + datetime.timedelta(days=-1)).strftime('%Y-%m-%d')
+    start_date = (datetime.datetime.today() + datetime.timedelta(days=-offset)).strftime('%Y-%m-%d')
+    end_date = (datetime.datetime.today() + datetime.timedelta(days=(-offset + 1))).strftime('%Y-%m-%d')
 
     # Open/Create a file to append data
     #csvFile = open('test_vegan.csv', 'a')
@@ -51,6 +52,7 @@ def download_twitter_search(search_terms, search_group):
     #json_file = open('test_vegan_%s.json'%start_date, 'w')
 
     print(start_date)
+    print(end_date)
 
     print(api.rate_limit_status()['resources']['search'])
 
@@ -191,10 +193,16 @@ search_terms_lists = {
 	]
 	}
 
+
+if len(sys.argv) == 1:
+    offset = 2
+else:
+    offset = int(sys.argv[1])
+
 #Pick list of terms to search.
 for group in ['vegan', 'clean_meat', 'cage-free', 'eaa', 'other']:
 #for group in ['other']:
     print(group)
-    download_twitter_search(search_terms_lists[group], group)
+    download_twitter_search(search_terms_lists[group], group, offset)
 
 
