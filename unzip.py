@@ -1,22 +1,41 @@
 import os
 import zipfile
 
-def twodig(x):
-    if x >= 10:
-        return(str(x))
-    else:
-        return("0" + str(x))
+NUM_MONTHS = 12
+NUM_DAYS = 31
+SOURCE = "C:/Users/mmatt/Desktop/all_data"
 
-for day in range(11,20):
-    
-    print(day)
+def extract_every_month():
+    for month in range(1, NUM_MONTHS + 1):
+        extract_every_day(twodig(month))
 
-    zip_ref = zipfile.ZipFile("temp_data/all_data_2019-02-%s.zip"%twodig(day), 'r')
-    zip_ref.extractall("temp_data/")
+def extract_every_day(month):
+    for day in range(1, NUM_DAYS + 1):
+        day = twodig(day)
+        try:
+            extract_zip(month, day)
+
+        except FileNotFoundError:
+            print("couldn't find all_data_2019-{0}-{1}.zip".format(month, day))
+
+def extract_zip(month, day):
+    zip_ref = zipfile.ZipFile("{0}/all_data_2019-{1}-{2}.zip".format(SOURCE, month, day), 'r')
+    zip_ref.extractall("{0}/all_pkl/".format(SOURCE))
+    print("extracted all_data_2019-{0}-{1}.zip".format(month, day))
     zip_ref.close()
 
-    files = os.listdir("temp_data/data/all_data_2019-02-%s"%twodig(day))
-    for f in files:
-        os.rename("temp_data/data/all_data_2019-02-%s/%s"%(twodig(day),f), "temp_data/%s"%f)
+    os.rename("{0}/all_pkl/data/all_data_2019-{1}-{2}".format(SOURCE, month, day),
+              "{0}/all_pkl/all_data_2019-{1}-{2}".format(SOURCE, month, day))
 
-    os.remove("temp_data/all_data_2019-02-%s.zip"%twodig(day))
+    os.remove("{0}/all_data_2019-{1}-{2}.zip".format(SOURCE, month, day))
+    print("     removed all_data_2019-{0}-{1}.zip".format(month, day))
+    # os.remove("C:/Users/mmatt/Desktop/all_data/all_pkl/data")
+
+def twodig(x):
+    if x >= 10:
+        return str(x)
+
+    return "0" + str(x)
+
+if __name__ == "__main__":
+    extract_every_month()
