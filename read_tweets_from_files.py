@@ -16,14 +16,20 @@ def get_tweet_text(data):
         text = data['full_text']
     return text
 
+def shorten_time(time):
+    regex = r'(\w+ \w+ \d+ \d+:\d+):\d+ \+\d+ (\d+)'
+    match = re.search(regex, time)
+    return '{0} {1}'.format(match.group(1), match.group(2))
+
 
 if __name__ == "__main__":
     #PKL_FILES = os.listdir("temp_data/all_data_2019-05-16")
-    PKL_FILES = os.listdir("../data")
+    PKL_FILES = os.listdir("C:/Users/mmatt/Desktop/data/all_data_2020-01-20")
 
-    ids = []
+    screen_names = []
+    # ids = []
     txts = []
-    uids = []
+    # uids = []
     favs = []
     rets = []
     times = []
@@ -34,26 +40,28 @@ if __name__ == "__main__":
         category = get_file_category(pf)
         #with open('temp_data/all_data_2019-05-16/%s' % pf, 'rb') as f:
         #with open('temp_data/all_data_2019-05-16/tweets_clean_meat_2019-05-16_128.pkl', 'rb') as f:
-        with open("../data/%s" % pf, 'rb') as f:
+        with open("C:/Users/mmatt/Desktop/data/all_data_2020-01-20/%s" % pf, 'rb') as f:
             raw_data = pkl.load(f)
 
         for x in raw_data:
-            ids += [x['id']]
+            screen_names += [x['user']['screen_name']]
+            # ids += [x['id']]
             txts += [get_tweet_text(x)]
-            uids += [x['user']['id']]
+            # uids += [x['user']['id']]
             favs += [x['favorite_count']]
             rets += [x['retweet_count']]
-            times += [x['created_at']]
+            times += [shorten_time(x['created_at'])]
             categories += [category]
 
-    clean_data = pd.DataFrame({'id': ids,
+    clean_data = pd.DataFrame({'screen_name': screen_names,
+                                # 'id': ids,
                                'text': txts,
-                               'user_id': uids,
+                               # 'user_id': uids,
                                'favorite_count': favs,
                                'retweet_count': rets,
                                'date_time': times,
                                'category': categories
                                })
 
-    print(clean_data)
-    clean_data.to_csv("test123.csv", index=False, encoding='utf-8')
+    # print(clean_data)
+    clean_data.to_csv("new_test_jan.csv", index=False, encoding='utf-8')
