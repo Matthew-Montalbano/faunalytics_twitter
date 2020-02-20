@@ -133,8 +133,7 @@ def download_twitter_search(search_terms, search_group, offset):
                     print(tweets[-1].id)
                     output_dict = []
 
-            max_id = tweets[-1].id
-            print(tweet_count)
+	            max_id = tweets[-1].id
         else:
             break
 
