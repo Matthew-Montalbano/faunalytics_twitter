@@ -3,6 +3,49 @@ import re
 import pickle as pkl
 import pandas as pd
 
+SOURCE = 'C:/Users/mmatt/Desktop/all_data/'
+
+def read_all_tweets():
+    for foldername in os.listdir('{0}/all_pkl'.format(SOURCE)):
+        print('reading from', foldername)
+        read_tweets_from_folder(foldername)
+
+def read_tweets_from_folder(foldername):
+    pkl_files = os.listdir('{0}/all_pkl/{1}'.format(SOURCE, foldername))
+    data = {'screen_names': [],
+            'txts': [],
+            'favs': [],
+            'rets': [],
+            'times': [],
+            'categories': []
+            }
+
+    for pkl_file in pkl_files:
+        print("Processing", pkl_file)
+        with open('{0}/all_pkl/{1}/{2}'.format(SOURCE, foldername, pkl_file), 'rb') as f:
+            raw_data = pkl.load(f)
+        populate_row_dictionary(raw_data, data, get_file_category(pkl_file))
+
+    clean_data = pd.DataFrame({'screen_name': data['screen_names'],
+                               'text': data['txts'],
+                               'favorite_count': data['favs'],
+                               'retweet_count': data['rets'],
+                               'date_time': data['times'],
+                               'category': data['categories']
+                               })
+
+    # print(clean_data)
+    clean_data.to_csv("{0}/all_csv/{1}.csv".format(SOURCE, foldername), index=False, encoding='utf-8')
+
+def populate_row_dictionary(data, row_dict, category):
+    for info in data:
+        row_dict['screen_names'] += [info['user']['screen_name']]
+        row_dict['txts'] += [get_tweet_text(info)]
+        row_dict['favs'] += [info['favorite_count']]
+        row_dict['rets'] += [info['retweet_count']]
+        row_dict['times'] += [shorten_time(info['created_at'])]
+        row_dict['categories'] += [category]
+
 def get_file_category(filename):
     match = re.search(r'tweets_(\w*-?\w*)_', filename)
     return match.group(1)
@@ -23,45 +66,4 @@ def shorten_time(time):
 
 
 if __name__ == "__main__":
-    #PKL_FILES = os.listdir("temp_data/all_data_2019-05-16")
-    PKL_FILES = os.listdir("C:/Users/mmatt/Desktop/data/all_data_2020-01-20")
-
-    screen_names = []
-    # ids = []
-    txts = []
-    # uids = []
-    favs = []
-    rets = []
-    times = []
-    categories = []
-
-    for pf in PKL_FILES:
-        print("Processing", pf)
-        category = get_file_category(pf)
-        #with open('temp_data/all_data_2019-05-16/%s' % pf, 'rb') as f:
-        #with open('temp_data/all_data_2019-05-16/tweets_clean_meat_2019-05-16_128.pkl', 'rb') as f:
-        with open("C:/Users/mmatt/Desktop/data/all_data_2020-01-20/%s" % pf, 'rb') as f:
-            raw_data = pkl.load(f)
-
-        for x in raw_data:
-            screen_names += [x['user']['screen_name']]
-            # ids += [x['id']]
-            txts += [get_tweet_text(x)]
-            # uids += [x['user']['id']]
-            favs += [x['favorite_count']]
-            rets += [x['retweet_count']]
-            times += [shorten_time(x['created_at'])]
-            categories += [category]
-
-    clean_data = pd.DataFrame({'screen_name': screen_names,
-                                # 'id': ids,
-                               'text': txts,
-                               # 'user_id': uids,
-                               'favorite_count': favs,
-                               'retweet_count': rets,
-                               'date_time': times,
-                               'category': categories
-                               })
-
-    # print(clean_data)
-    clean_data.to_csv("new_test_jan.csv", index=False, encoding='utf-8')
+    read_all_tweets()
