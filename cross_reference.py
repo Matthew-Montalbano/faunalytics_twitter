@@ -3,7 +3,6 @@ import random
 import re
 import time
 import pandas as pd
-#import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -14,21 +13,10 @@ DRIVER = webdriver.Chrome(chrome_options=options)
 DRIVER.implicitly_wait(5)
 
 
-'''def find_all_banned(data):
-    banned = []
-    for screen_name in data['screen_name']:
-        random_sleep()
-        #user_info = scrape_shadowbaneu(screen_name)
-        user_info = scrape_shadowbanio(screen_name)
-        print('checking if {} is banned'.format(screen_name))
-        if determine_ban(user_info):
-            print('\t{} is banned'.format(screen_name))
-            banned.append(screen_name)
-    return banned'''
-
 def cross_reference_users(data):
     approved = []
     banned = []
+    num_users_checked = 1
     try:
         for screen_name in data['screen_name']:
             random_sleep()
@@ -36,6 +24,12 @@ def cross_reference_users(data):
                 banned.append(screen_name)
             else:
                 approved.append(screen_name)
+            if num_users_checked % 500 == 0:
+                append_to_csvs(approved, banned)
+                print('\nappending 500 names to csvs...\n')
+                approved = []
+                banned = []
+            num_users_checked += 1
     except KeyboardInterrupt:
         print('Writing to csv\'s and quitting...')
     return (approved, banned)
@@ -56,14 +50,17 @@ def check_for_ban(user):
     return is_banned
 
 def check_shadowban_io(user):
-    user_info = scrape_shadowban_io(user)
-    return user_info['data']['banned']
+    while True:
+        try:
+            user_info = scrape_shadowban_io(user)
+            return user_info['data']['banned']
+        except KeyError:
+            print('\tcouldn\'t check user, sleeping for 3 seconds...')
+            time.sleep(3)
 
 def scrape_shadowban_io(user):
     DRIVER.get('https://api.shadowban.io/api/v1/twitter/@{}'.format(user))
     return get_json_data(DRIVER.page_source)
-    #res = requests.get('https://api.shadowban.io/api/v1/twitter/@{}'.format(user))
-    #return json.loads(res.text)
 
 def get_json_data(html):
     regex = '>({.*})<'
@@ -73,20 +70,17 @@ def get_json_data(html):
     return json.loads(match[1])
 
 def check_shadowban_eu(user):
-    user_info = scrape_shadowban_eu(user)
-    return determine_ban_status(user_info)
-
-def scrape_shadowban_eu(user):
     while True:
-        DRIVER.get('https://shadowban.eu/.api/{0}'.format(user))
-        user_data = get_json_data(DRIVER.page_source)
-        if user_data is None or user_data['profile']['screen_name'].lower() != user.lower():
-            print('\tcouldn\'t load user, sleeping for 3 seconds...')
-            print(user_data)
+        user_info = scrape_shadowban_eu(user)
+        if user_info is None or user_info['profile']['screen_name'].lower() != user.lower():
+            print('\tcouldn\'t check user, sleeping for 3 seconds...')
             time.sleep(3)
         else:
-            break
-    return user_data
+            return determine_ban_status(user_info)
+
+def scrape_shadowban_eu(user):
+    DRIVER.get('https://shadowban.eu/.api/{0}'.format(user))
+    return get_json_data(DRIVER.page_source)
 
 def determine_ban_status(user_info):
     ban = False
