@@ -55,6 +55,8 @@ def check_shadowban_io(user):
             user_info = scrape_shadowban_io(user)
             return user_info['data']['banned']
         except KeyError:
+            if "error" in user_info:
+                return False
             print('\tcouldn\'t check user, sleeping for 3 seconds...')
             time.sleep(3)
 
