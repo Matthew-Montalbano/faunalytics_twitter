@@ -1,17 +1,47 @@
+import glob
 import json
 import random
 import re
 import time
+import sys
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 SOURCE = "C:/Users/mmatt/Desktop/all_data/all_csv"
-options = Options()
-options.headless = True
-DRIVER = webdriver.Chrome(chrome_options=options)
+OPTIONS = Options()
+OPTIONS.headless = True
+DRIVER = webdriver.Chrome(chrome_options=OPTIONS)
 DRIVER.implicitly_wait(5)
 
+def cross_reference_all_files():
+    all_csv_files = glob.glob('{0}/*.csv'.format(SOURCE))
+    for csv in all_csv_files:
+        print('cross referencing {0}'.format(csv))
+        cross_reference_file(csv)
+
+def cross_reference_file(filepath):
+    data, banned_names, approved_names = read_in_csvs(filepath)
+    data = clean_data(data, approved_names, banned_names)
+    (approved_users, banned_users) = cross_reference_users(data)
+    append_to_csvs(approved_users, banned_users)
+
+def read_in_csvs(filepath):
+    data = pd.read_csv(filepath)
+    banned_list = pd.read_csv('{0}/list_of_names/banned.csv'.format(SOURCE))
+    approved_list = pd.read_csv('{0}/list_of_names/approved.csv'.format(SOURCE))
+    return data, banned_list, approved_list
+
+def clean_data(data, approved_list, banned_list):
+    data = data.drop_duplicates(subset=['text'], keep='first')
+    data = drop_screen_names(data, banned_list)
+    data = drop_screen_names(data, approved_list)
+    data = data.drop_duplicates(subset=['screen_name'], keep='first')
+    return data
+
+def drop_screen_names(data, names_list):
+    print('Dropping known screen_names...')
+    return data[~data['screen_name'].isin(names_list['screen_name'])]
 
 def cross_reference_users(data):
     approved = []
@@ -32,6 +62,8 @@ def cross_reference_users(data):
             num_users_checked += 1
     except KeyboardInterrupt:
         print('Writing to csv\'s and quitting...')
+        append_to_csvs(approved, banned)
+        sys.exit("Successfully quit")
     return (approved, banned)
 
 def random_sleep():
@@ -104,19 +136,8 @@ def ban_requirements(tests):
 def append_to_csvs(approved_array, banned_array):
     approved = pd.DataFrame(approved_array)
     banned = pd.DataFrame(banned_array)
-    approved.to_csv('{0}/approved.csv'.format(SOURCE), mode='a', header=False, index=False)
-    banned.to_csv('{0}/banned.csv'.format(SOURCE), mode='a', header=False, index=False)
-
-def drop_screen_names(data, names_list):
-    print('Dropping known screen_names...')
-    return data[~data['screen_name'].isin(names_list['screen_name'])]
+    approved.to_csv('{0}/list_of_names/approved.csv'.format(SOURCE), mode='a', header=False, index=False)
+    banned.to_csv('{0}/list_of_names/banned.csv'.format(SOURCE), mode='a', header=False, index=False)
 
 if __name__ == "__main__":
-    data = pd.read_csv("{0}/new_test_jan.csv".format(SOURCE))
-    banned_list = pd.read_csv('{0}/banned.csv'.format(SOURCE))
-    approved_list = pd.read_csv('{0}/approved.csv'.format(SOURCE))
-    data = drop_screen_names(data, banned_list)
-    data = drop_screen_names(data, approved_list)
-    (approved_users, banned_users) = cross_reference_users(data.drop_duplicates(subset=['screen_name'],
-                                                                                keep='first'))
-    append_to_csvs(approved_users, banned_users)
+    cross_reference_all_files()
