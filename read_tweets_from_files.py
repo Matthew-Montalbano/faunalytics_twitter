@@ -3,7 +3,7 @@ import re
 import pickle as pkl
 import pandas as pd
 
-SOURCE = 'C:/Users/mmatt/Desktop/all_data/'
+SOURCE = 'F:/Users/mmatt_000/Faunalytics/all_data'
 
 def read_all_tweets():
     for foldername in os.listdir('{0}/all_pkl'.format(SOURCE)):

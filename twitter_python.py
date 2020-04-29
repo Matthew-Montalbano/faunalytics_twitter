@@ -10,13 +10,6 @@ import tweepy
 # import csv
 # import jsonpickle
 
-'''
-Paul's keys:
-CONSUMER_KEY = "PDZPPLGUu5ySTrR5viqi2l9mN"
-CONSUMER_SECRET = "9VOIBWCGl7Y7sJ6hXaP5QY9j7wKYBMo9NzK8Fun29IIpRc1Xbo"
-ACCESS_TOKEN = "796525448301780992-ef1dlKykooXAaiD9RWQS87FdqK8cMnF"
-ACCESS_TOKEN_SECRET = "tXT82ibd014C9xfUk7kBaIcZdBzm8D7cf999rD2gISl3L"
-'''
 
 SEARCH_TERMS_LISTS = {
     'vegan':
@@ -194,6 +187,5 @@ if __name__ == "__main__":
 
     # Pick list of terms to search.
     for group in SEARCH_TERMS_LISTS:
-    # for group in ['other']:
         print(group)
         download_twitter_search(SEARCH_TERMS_LISTS[group], group, OFFSET)
